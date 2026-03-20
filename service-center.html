@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>M R Service Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent: #f0a500;
+    --accent2: #e05c1a;
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --success: #2ecc7a;
+    --danger: #e05050;
+    --info: #4a9eff;
+    --warn: #f0a500;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at 30% 50%, #1a1f2e 0%, #0d0f14 60%);
+    position:relative; overflow:hidden;
+  }
+  #loginScreen::before {
+    content:''; position:absolute; inset:0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(240,165,0,.03) 60px,rgba(240,165,0,.03) 61px),
+                repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(240,165,0,.03) 60px,rgba(240,165,0,.03) 61px);
+  }
+  .login-box {
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    padding:48px 44px; width:420px; position:relative; z-index:1;
+    box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(240,165,0,.08);
+    animation: fadeUp .5s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+  .login-logo { display:flex; align-items:center; gap:12px; margin-bottom:36px; }
+  .login-logo .icon {
+    width:48px; height:48px; background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-radius:12px; display:grid; place-items:center; font-size:22px;
+  }
+  .login-logo h1 { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-.5px; }
+  .login-logo span { display:block; font-size:11px; color:var(--muted); font-weight:400; letter-spacing:.5px; text-transform:uppercase; }
+  .login-subtitle { color:var(--muted); font-size:13.5px; margin-bottom:28px; line-height:1.6; }
+  .field { margin-bottom:18px; }
+  .field label { display:block; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.6px; text-transform:uppercase; margin-bottom:8px; }
+  .field input, .field select {
+    width:100%; background:var(--surface2); border:1.5px solid var(--border); border-radius:10px;
+    padding:12px 16px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14.5px;
+    outline:none; transition:.2s;
+  }
+  .field input:focus, .field select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(240,165,0,.12); }
+  .field select option { background:var(--surface2); }
+  .btn-login {
+    width:100%; padding:14px; background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:none; border-radius:10px; color:#0d0f14; font-family:'Syne',sans-serif;
+    font-size:15px; font-weight:700; cursor:pointer; letter-spacing:.3px;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-login:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(240,165,0,.3); }
+  .login-error { background:rgba(224,80,80,.12); border:1px solid rgba(224,80,80,.3); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--danger); margin-top:14px; display:none; }
+
+  /* ── SHELL ── */
+  #app { display:none; min-height:100vh; flex-direction:column; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; padding:0 28px; height:62px;
+    position:sticky; top:0; z-index:100;
+  }
+  .topbar-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; display:flex; align-items:center; gap:10px; }
+  .topbar-logo .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+  .topbar-spacer { flex:1; }
+  .topbar-user { display:flex; align-items:center; gap:12px; }
+  .user-pill {
+    display:flex; align-items:center; gap:10px; background:var(--surface2);
+    border:1px solid var(--border); border-radius:40px; padding:6px 16px 6px 6px;
+  }
+  .user-avatar {
+    width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid; place-items:center; font-family:'Syne',sans-serif; font-size:13px; font-weight:800; color:#0d0f14;
+  }
+  .user-name { font-size:13.5px; font-weight:600; }
+  .user-role { font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .btn-logout {
+    background:transparent; border:1.5px solid var(--border); border-radius:8px;
+    color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; padding:7px 14px; cursor:pointer;
+    transition:.2s;
+  }
+  .btn-logout:hover { border-color:var(--danger); color:var(--danger); }
+
+  /* ── LAYOUT ── */
+  .main-layout { display:flex; flex:1; }
+  .sidebar {
+    width:220px; background:var(--surface); border-right:1px solid var(--border);
+    padding:20px 12px; display:flex; flex-direction:column; gap:4px;
+    position:sticky; top:62px; height:calc(100vh - 62px); overflow-y:auto;
+  }
+  .nav-section { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:1.2px; text-transform:uppercase; padding:10px 10px 6px; margin-top:6px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+    cursor:pointer; transition:.15s; font-size:13.5px; color:var(--muted); font-weight:500;
+    border:1px solid transparent;
+  }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:rgba(240,165,0,.1); color:var(--accent); border-color:rgba(240,165,0,.2); font-weight:600; }
+  .nav-item .ni { font-size:16px; }
+  .badge { margin-left:auto; background:var(--accent); color:#0d0f14; font-size:10px; font-weight:800; border-radius:20px; padding:1px 7px; }
+
+  /* ── CONTENT ── */
+  .content { flex:1; padding:30px 32px; overflow-y:auto; }
+  .page { display:none; animation:fadeUp .3s ease both; }
+  .page.active { display:block; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom:28px; }
+  .page-header h2 { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; letter-spacing:-.5px; }
+  .page-header p { color:var(--muted); font-size:13.5px; margin-top:4px; }
+  .page-header-row { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+
+  /* ── STAT CARDS ── */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px 22px;
+    position:relative; overflow:hidden; transition:.2s;
+  }
+  .stat-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); opacity:.6; }
+  .stat-label { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.8px; text-transform:uppercase; margin-bottom:10px; }
+  .stat-value { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .stat-icon { position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:36px; opacity:.12; }
+
+  /* ── TABLE ── */
+  .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:24px; }
+  .table-header { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .table-header h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; }
+  th { padding:12px 18px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.8px; text-transform:uppercase; background:var(--surface2); border-bottom:1px solid var(--border); }
+  td { padding:14px 18px; font-size:13.5px; border-bottom:1px solid rgba(42,48,69,.5); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(30,35,48,.5); }
+
+  /* ── STATUS CHIPS ── */
+  .chip {
+    display:inline-flex; align-items:center; gap:5px; padding:3px 10px;
+    border-radius:20px; font-size:11.5px; font-weight:600;
+  }
+  .chip::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .chip-open { background:rgba(74,158,255,.12); color:var(--info); }
+  .chip-progress { background:rgba(240,165,0,.12); color:var(--warn); }
+  .chip-done { background:rgba(46,204,122,.12); color:var(--success); }
+  .chip-cancelled { background:rgba(224,80,80,.12); color:var(--danger); }
+
+  /* ── BUTTONS ── */
+  .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 18px; border-radius:9px; font-family:'DM Sans',sans-serif; font-size:13.5px; font-weight:600; cursor:pointer; border:none; transition:.15s; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0d0f14; }
+  .btn-primary:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 6px 20px rgba(240,165,0,.25); }
+  .btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
+  .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-danger { background:rgba(224,80,80,.12); border:1px solid rgba(224,80,80,.3); color:var(--danger); }
+  .btn-danger:hover { background:rgba(224,80,80,.2); }
+  .btn-sm { padding:6px 12px; font-size:12px; border-radius:7px; }
+
+  /* ── EMPLOYEE CARDS ── */
+  .emp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; margin-bottom:24px; }
+  .emp-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;
+    transition:.2s; position:relative; overflow:hidden;
+  }
+  .emp-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .emp-card-top { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .emp-avatar {
+    width:50px; height:50px; border-radius:14px; display:grid; place-items:center;
+    font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:#0d0f14;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .emp-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; }
+  .emp-role { font-size:12px; color:var(--muted); }
+  .emp-info { display:flex; flex-direction:column; gap:8px; }
+  .emp-info-row { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; }
+  .emp-info-label { color:var(--muted); }
+  .emp-cred { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:12px; }
+  .emp-cred-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+  .emp-cred-row:last-child { margin:0; }
+  .cred-key { color:var(--muted); font-weight:500; }
+  .cred-val { font-family:monospace; font-size:13px; color:var(--accent); font-weight:600; }
+  .emp-status { position:absolute; top:16px; right:16px; }
+
+  /* ── FORM ── */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-grid.three { grid-template-columns:1fr 1fr 1fr; }
+  .form-full { grid-column:1/-1; }
+  .form-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:20px; }
+  .form-section-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+  textarea { width:100%; background:var(--surface2); border:1.5px solid var(--border); border-radius:10px; padding:12px 16px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; resize:vertical; min-height:90px; transition:.2s; }
+  textarea:focus { border-color:var(--accent); }
+
+  /* ── MODAL ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:999; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:32px; width:500px; max-width:95vw; max-height:90vh; overflow-y:auto; animation:fadeUp .3s ease; box-shadow:0 40px 80px rgba(0,0,0,.6); }
+  .modal-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:6px; }
+  .modal-sub { color:var(--muted); font-size:13px; margin-bottom:24px; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+
+  /* ── ALERT ── */
+  .alert { border-radius:10px; padding:12px 16px; font-size:13.5px; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+  .alert-success { background:rgba(46,204,122,.1); border:1px solid rgba(46,204,122,.25); color:var(--success); }
+  .alert-info { background:rgba(74,158,255,.1); border:1px solid rgba(74,158,255,.25); color:var(--info); }
+
+  /* ── SEARCH ── */
+  .search-bar { position:relative; }
+  .search-bar input { background:var(--surface2); border:1.5px solid var(--border); border-radius:9px; padding:9px 16px 9px 38px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13.5px; outline:none; width:220px; transition:.2s; }
+  .search-bar input:focus { border-color:var(--accent); width:260px; }
+  .search-bar::before { content:'🔍'; position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.5; }
+
+  /* ── PRIORITY ── */
+  .prio-high { color:var(--danger); font-weight:700; }
+  .prio-med { color:var(--warn); font-weight:600; }
+  .prio-low { color:var(--success); font-weight:500; }
+
+  /* ── ACTIVITY ── */
+  .activity-feed { display:flex; flex-direction:column; gap:0; }
+  .activity-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid rgba(42,48,69,.5); }
+  .activity-item:last-child { border:none; }
+  .act-dot { width:10px; height:10px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .act-text { font-size:13.5px; line-height:1.5; }
+  .act-time { font-size:11.5px; color:var(--muted); margin-top:2px; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:768px) {
+    .sidebar { display:none; }
+    .content { padding:20px 16px; }
+    .form-grid { grid-template-columns:1fr; }
+    .form-grid.three { grid-template-columns:1fr; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--surface); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ── NOTIFICATION TOAST ── */
+  #toast { position:fixed; bottom:28px; right:28px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+  .toast-item {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px 18px; font-size:13.5px; min-width:260px; box-shadow:0 20px 40px rgba(0,0,0,.4);
+    display:flex; align-items:center; gap:10px; animation:fadeUp .3s ease;
+  }
+  .toast-item.success { border-left:3px solid var(--success); }
+  .toast-item.info { border-left:3px solid var(--info); }
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">📺</div>
+      <div>
+        <h1>M R Service</h1>
+        <span>TV Repair & Installation</span>
+      </div>
+    </div>
+    <p class="login-subtitle">Sign in with your assigned credentials to access your dashboard.</p>
+    <div class="field">
+      <label>User ID</label>
+      <input type="text" id="loginId" placeholder="e.g. ADMIN or EMP001" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="Enter password"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="loginError">Incorrect ID or password. Please try again.</div>
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;">Demo Credentials — M R Service</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:3px">Admin</div>
+          <div style="color:var(--muted)">ID: <span style="color:var(--text);font-family:monospace">ADMIN</span></div>
+          <div style="color:var(--muted)">PW: <span style="color:var(--text);font-family:monospace">admin123</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px">
+          <div style="color:var(--info);font-weight:700;margin-bottom:3px">Employee 1</div>
+          <div style="color:var(--muted)">ID: <span style="color:var(--text);font-family:monospace">EMP001</span></div>
+          <div style="color:var(--muted)">PW: <span style="color:var(--text);font-family:monospace">emp001pass</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px">
+          <div style="color:var(--info);font-weight:700;margin-bottom:3px">Employee 2</div>
+          <div style="color:var(--muted)">ID: <span style="color:var(--text);font-family:monospace">EMP002</span></div>
+          <div style="color:var(--muted)">PW: <span style="color:var(--text);font-family:monospace">emp002pass</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px">
+          <div style="color:var(--info);font-weight:700;margin-bottom:3px">Employee 3</div>
+          <div style="color:var(--muted)">ID: <span style="color:var(--text);font-family:monospace">EMP003</span></div>
+          <div style="color:var(--muted)">PW: <span style="color:var(--text);font-family:monospace">emp003pass</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app" style="display:none;min-height:100vh;flex-direction:column;">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo"><span class="dot"></span> M R Service</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-user">
+      <div class="user-pill">
+        <div class="user-avatar" id="topAvatar">A</div>
+        <div>
+          <div class="user-name" id="topName">Admin</div>
+          <div class="user-role" id="topRole">Administrator</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar"></div>
+
+    <!-- CONTENT -->
+    <div class="content" id="content">
+      <!-- Admin Pages -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header-row">
+          <div class="page-header">
+            <h2>Dashboard Overview</h2>
+            <p id="dashGreet">Welcome back, Admin</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('newJobModal')">+ New Job</button>
+        </div>
+
+        <!-- Main Stats Row -->
+        <div class="stats" id="statsGrid"></div>
+
+        <!-- Status Breakdown Bar -->
+        <div class="table-wrap" style="margin-bottom:24px;padding:20px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">Overall Job Status</span>
+            <span id="dashTotalLabel" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+          <div id="statusBar" style="display:flex;border-radius:8px;overflow:hidden;height:14px;gap:2px;margin-bottom:14px"></div>
+          <div id="statusLegend" style="display:flex;gap:20px;flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Employee Tracker + Recent Jobs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+          <!-- Employee Tracker -->
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>👷 Employee Tracker</h3>
+              <select id="trackerMonth" onchange="renderDashboard()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none">
+                <option value="ALL">All Time</option>
+                <option value="2025-03">March 2025</option>
+                <option value="2025-02">February 2025</option>
+                <option value="2025-01">January 2025</option>
+              </select>
+            </div>
+            <div id="empTracker" style="padding:0 4px 8px"></div>
+          </div>
+
+          <!-- Recent Jobs -->
+          <div class="table-wrap">
+            <div class="table-header"><h3>Recent Jobs</h3><button class="btn btn-outline btn-sm" onclick="showPage('page-jobs')">View All</button></div>
+            <table><thead><tr><th>Job #</th><th>Customer</th><th>Assigned</th><th>Status</th></tr></thead>
+            <tbody id="recentJobsTbl"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="table-wrap">
+          <div class="table-header"><h3>Activity Log</h3></div>
+          <div style="padding:0 18px" class="activity-feed" id="activityFeed"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-jobs">
+        <div class="page-header-row">
+          <div class="page-header"><h2>All Jobs</h2><p>Manage and track all service jobs</p></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="search-bar"><input type="text" placeholder="Search jobs..." oninput="filterJobs(this.value)"/></div>
+            <button class="btn btn-primary" onclick="openModal('newJobModal')">+ New Job</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Job #</th><th>Customer</th><th>Address</th><th>Service Type</th><th>Assigned To</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="allJobsTbl"></tbody></table>
+        </div>
+      </div>
+
+      <div class="page" id="page-employees">
+        <div class="page-header-row">
+          <div class="page-header"><h2>Employee Management</h2><p id="empSubtitle">Manage your service employees and their credentials</p></div>
+          <button class="btn btn-primary" onclick="openModal('newEmpModal')">+ Add Employee</button>
+        </div>
+        <div class="emp-grid" id="empGrid"></div>
+        <div class="alert alert-info">💡 Credentials shown below should be shared privately with each employee so they can log in and manage their assigned jobs.</div>
+
+        <!-- Monthly Records -->
+        <div style="margin-top:32px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+            <div>
+              <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">📊 Monthly Call Records</h3>
+              <p style="color:var(--muted);font-size:13px;margin-top:3px">Total jobs completed per employee each month</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <select id="recordYear" onchange="renderMonthlyRecords()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+                <option value="2025">2025</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table><thead id="monthlyHead"></thead><tbody id="monthlyBody"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Job History per Employee -->
+        <div style="margin-top:32px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+            <div>
+              <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">📋 Job History</h3>
+              <p style="color:var(--muted);font-size:13px;margin-top:3px">All past jobs with customer and service details</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <select id="historyEmp" onchange="renderJobHistory()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+                <option value="ALL">All Employees</option>
+              </select>
+              <select id="historyMonth" onchange="renderJobHistory()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+                <option value="ALL">All Months</option>
+                <option value="2025-03">March 2025</option>
+                <option value="2025-02">February 2025</option>
+                <option value="2025-01">January 2025</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Job #</th><th>Date</th><th>Employee</th><th>Customer</th><th>Address</th><th>Service</th><th>Status</th><th>Remark</th></tr></thead>
+            <tbody id="historyTbl"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-appointments">
+        <div class="page-header-row">
+          <div class="page-header"><h2>Appointments</h2><p>Schedule and manage service appointments</p></div>
+          <button class="btn btn-primary" onclick="openModal('newApptModal')">+ Schedule Appointment</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>ID</th><th>Customer</th><th>Date & Time</th><th>Service</th><th>Assigned</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="apptTbl"></tbody></table>
+        </div>
+      </div>
+
+      <div class="page" id="page-inventory">
+        <div class="page-header-row">
+          <div class="page-header"><h2>Inventory</h2><p>Track parts and materials</p></div>
+          <button class="btn btn-primary" onclick="openModal('newPartModal')">+ Add Part</button>
+        </div>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Total Parts</div><div class="stat-value" id="invTotal">0</div><span class="stat-icon">📦</span></div>
+          <div class="stat-card"><div class="stat-label">Low Stock</div><div class="stat-value" id="invLow" style="color:var(--danger)">0</div><span class="stat-icon">⚠️</span></div>
+          <div class="stat-card"><div class="stat-label">Out of Stock</div><div class="stat-value" id="invOut" style="color:var(--danger)">0</div><span class="stat-icon">🚫</span></div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Part ID</th><th>Name</th><th>Category</th><th>Stock</th><th>Min Stock</th><th>Unit Cost</th><th>Status</th></tr></thead>
+          <tbody id="invTbl"></tbody></table>
+        </div>
+      </div>
+
+      <div class="page" id="page-reports">
+        <div class="page-header"><h2>Reports</h2><p>Performance overview and statistics</p></div>
+        <div class="stats" id="reportStats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="table-wrap">
+            <div class="table-header"><h3>Employee Performance</h3></div>
+            <table><thead><tr><th>Employee</th><th>Jobs Done</th><th>In Progress</th><th>Avg Time</th></tr></thead>
+            <tbody id="perfTbl"></tbody></table>
+          </div>
+          <div class="table-wrap">
+            <div class="table-header"><h3>Job Status Breakdown</h3></div>
+            <table><thead><tr><th>Status</th><th>Count</th><th>Percentage</th></tr></thead>
+            <tbody id="breakTbl"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee-only pages -->
+      <div class="page" id="page-emp-dashboard">
+        <div class="page-header-row">
+          <div class="page-header">
+            <h2>My Dashboard</h2>
+            <p id="empDashGreet">Welcome back</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('newJobModal')">+ New Job</button>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats" id="empStatsGrid"></div>
+
+        <!-- Status Bar -->
+        <div class="table-wrap" style="margin-bottom:24px;padding:20px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">My Call Status Overview</span>
+            <span id="empTotalLabel" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+          <div id="empStatusBar" style="display:flex;border-radius:8px;overflow:hidden;height:14px;gap:2px;margin-bottom:14px"></div>
+          <div id="empStatusLegend" style="display:flex;gap:20px;flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Monthly Tracker + Recent Jobs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+          <!-- Monthly Breakdown -->
+          <div class="table-wrap">
+            <div class="table-header">
+              <h3>📅 Monthly Record</h3>
+              <select id="empTrackerYear" onchange="renderEmpDashboard()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none">
+                <option value="2025">2025</option>
+              </select>
+            </div>
+            <div id="empMonthlyTable" style="padding:0 4px 8px"></div>
+          </div>
+
+          <!-- Recent My Jobs -->
+          <div class="table-wrap">
+            <div class="table-header"><h3>Recent My Jobs</h3><button class="btn btn-outline btn-sm" onclick="showPage('page-myjobs')">View All</button></div>
+            <table><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Status</th></tr></thead>
+            <tbody id="empRecentTbl"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="table-wrap">
+          <div class="table-header"><h3>Activity Log</h3></div>
+          <div style="padding:0 18px" class="activity-feed" id="empActivityFeed"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-myjobs">
+        <div class="page-header-row">
+          <div class="page-header"><h2>My Jobs</h2><p id="myJobSub">Your assigned service jobs</p></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="myJobFilter" onchange="renderMyJobs()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
+              <option value="ALL">All Status</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn btn-primary" onclick="openModal('newJobModal')">+ New Job</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Job #</th><th>Customer</th><th>Address</th><th>Service</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="myJobsTbl"></tbody></table>
+        </div>
+      </div>
+
+      <div class="page" id="page-myappointments">
+        <div class="page-header"><h2>My Appointments</h2><p>Appointments assigned to you</p></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>ID</th><th>Customer</th><th>Date & Time</th><th>Service</th><th>Status</th></tr></thead>
+          <tbody id="myApptTbl"></tbody></table>
+        </div>
+      </div>
+
+      <div class="page" id="page-profile">
+        <div class="page-header"><h2>My Profile</h2><p>Your account information</p></div>
+        <div class="form-section" style="max-width:500px" id="profileBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ MODALS ════════════ -->
+
+<!-- New Job -->
+<div class="modal-overlay" id="newJobModal">
+  <div class="modal">
+    <div class="modal-title">📺 New Service Call</div>
+    <div class="modal-sub">Create a new TV repair or installation job</div>
+    <div class="form-grid">
+      <div class="field form-full"><label>Customer Name</label><input type="text" id="jCust" placeholder="Customer full name"/></div>
+      <div class="field form-full"><label>Address</label><input type="text" id="jAddress" placeholder="Customer address"/></div>
+      <div class="field"><label>Service Type</label>
+        <select id="jService">
+          <option>📺 TV Installation</option>
+          <option>🔧 TV Repair</option>
+          <option>📡 Antenna Installation</option>
+          <option>🖥️ Screen Replacement</option>
+          <option>🔌 Power Issue Repair</option>
+          <option>🔊 Speaker / Audio Repair</option>
+          <option>📶 Smart TV Setup</option>
+          <option>🎮 HDMI / Port Repair</option>
+          <option>🌡️ Motherboard Repair</option>
+          <option>🔍 Diagnosis & Inspection</option>
+        </select>
+      </div>
+      <div class="field"><label>Assigned To</label>
+        <select id="jAssign">
+          <option value="EMP001">Alex Morgan (EMP001)</option>
+          <option value="EMP002">Jordan Lee (EMP002)</option>
+          <option value="EMP003">Sam Rivera (EMP003)</option>
+        </select>
+      </div>
+      <div class="field form-full"><label>Remark</label><textarea id="jNotes" placeholder="Any remarks or special instructions..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newJobModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addJob()">Create Job</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Job Status -->
+<div class="modal-overlay" id="updateJobModal">
+  <div class="modal">
+    <div class="modal-title">✏️ Update Job Status</div>
+    <div class="modal-sub" id="updateJobSub"></div>
+    <div class="field"><label>New Status</label>
+      <select id="uStatus">
+        <option>Open</option><option>In Progress</option><option>Done</option><option>Cancelled</option>
+      </select>
+    </div>
+    <div class="field"><label>Update Notes</label><textarea id="uNotes" placeholder="Add a note about this update..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('updateJobModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveJobUpdate()">Save Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Appointment -->
+<div class="modal-overlay" id="newApptModal">
+  <div class="modal">
+    <div class="modal-title">📅 Schedule Appointment</div>
+    <div class="modal-sub">Book a new service appointment</div>
+    <div class="form-grid">
+      <div class="field form-full"><label>Customer Name</label><input type="text" id="aCust" placeholder="Customer name"/></div>
+      <div class="field"><label>Date</label><input type="date" id="aDate"/></div>
+      <div class="field"><label>Time</label><input type="time" id="aTime" value="09:00"/></div>
+      <div class="field"><label>Service</label>
+        <select id="aService">
+          <option>📺 TV Installation</option>
+          <option>🔧 TV Repair</option>
+          <option>📡 Antenna Installation</option>
+          <option>🖥️ Screen Replacement</option>
+          <option>🔌 Power Issue Repair</option>
+          <option>📶 Smart TV Setup</option>
+        </select>
+      </div>
+      <div class="field"><label>Assign To</label>
+        <select id="aAssign">
+          <option value="EMP001">Alex Morgan</option>
+          <option value="EMP002">Jordan Lee</option>
+          <option value="EMP003">Sam Rivera</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newApptModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAppt()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Part -->
+<div class="modal-overlay" id="newPartModal">
+  <div class="modal">
+    <div class="modal-title">📦 Add Inventory Part</div>
+    <div class="form-grid">
+      <div class="field form-full"><label>Part Name</label><input type="text" id="pName" placeholder="Part name"/></div>
+      <div class="field"><label>Category</label>
+        <select id="pCat"><option>Engine</option><option>Brakes</option><option>Electrical</option><option>Tires</option><option>Body</option><option>AC</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Stock Qty</label><input type="number" id="pStock" value="10" min="0"/></div>
+      <div class="field"><label>Min Stock</label><input type="number" id="pMin" value="5" min="0"/></div>
+      <div class="field"><label>Unit Cost ($)</label><input type="number" id="pCost" value="0" min="0" step="0.01"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newPartModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addPart()">Add Part</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Employee -->
+<div class="modal-overlay" id="newEmpModal">
+  <div class="modal">
+    <div class="modal-title">👤 Add New Employee</div>
+    <div class="modal-sub">Create a new employee account with login credentials</div>
+    <div class="form-grid">
+      <div class="field form-full"><label>Full Name</label><input type="text" id="eName" placeholder="e.g. John Smith"/></div>
+      <div class="field"><label>Role / Title</label><input type="text" id="eRole" placeholder="e.g. TV Technician"/></div>
+      <div class="field"><label>Speciality</label><input type="text" id="eSpec" placeholder="e.g. Screen and Installation"/></div>
+      <div class="field"><label>User ID (for login)</label><input type="text" id="eId" placeholder="e.g. EMP004" style="font-family:monospace"/></div>
+      <div class="field"><label>Password (for login)</label><input type="text" id="ePass" placeholder="e.g. emp004pass"/></div>
+    </div>
+    <div id="empCreateError" style="display:none;background:rgba(224,80,80,.12);border:1px solid rgba(224,80,80,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--danger);margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newEmpModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEmployee()">Create Employee</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
+let USERS = {
+  ADMIN:  { id:'ADMIN',  pass:'admin123',   name:'Admin',        role:'admin',    emp:null },
+  EMP001: { id:'EMP001', pass:'emp001pass', name:'Alex Morgan',  role:'employee', emp:'EMP001' },
+  EMP002: { id:'EMP002', pass:'emp002pass', name:'Jordan Lee',   role:'employee', emp:'EMP002' },
+  EMP003: { id:'EMP003', pass:'emp003pass', name:'Sam Rivera',   role:'employee', emp:'EMP003' },
+};
+
+const EMPLOYEES = [
+  { id:'EMP001', name:'Alex Morgan',  role:'Lead TV Technician',      avatar:'AM', jobs:0, speciality:'Installation & Screen Repair' },
+  { id:'EMP002', name:'Jordan Lee',   role:'Electronics Specialist',  avatar:'JL', jobs:0, speciality:'Board & Power Repair' },
+  { id:'EMP003', name:'Sam Rivera',   role:'Service Technician',      avatar:'SR', jobs:0, speciality:'Smart TV & Antenna Setup' },
+];
+
+let jobs = [
+  // March 2025
+  { id:'JOB-001', cust:'Michael Brown',   address:'12 Oak Street, Downtown',      service:'📺 TV Installation',      assigned:'EMP001', status:'Done',        date:'2025-03-18', notes:'55 inch Samsung wall mount installation' },
+  { id:'JOB-002', cust:'Sarah Williams',  address:'45 Pine Ave, Westside',         service:'🔧 TV Repair',            assigned:'EMP002', status:'In Progress', date:'2025-03-19', notes:'Screen flickering, needs inspection' },
+  { id:'JOB-003', cust:'David Clark',     address:'8 Maple Rd, Northview',         service:'🖥️ Screen Replacement',   assigned:'EMP001', status:'Open',        date:'2025-03-19', notes:'Cracked screen on 65" LG OLED' },
+  { id:'JOB-004', cust:'Emily Johnson',   address:'99 Cedar Blvd, Eastpark',       service:'📶 Smart TV Setup',       assigned:'EMP003', status:'In Progress', date:'2025-03-20', notes:'WiFi and streaming apps configuration' },
+  { id:'JOB-005', cust:'Robert Davis',    address:'3 Birch Lane, Southend',        service:'🔌 Power Issue Repair',   assigned:'EMP002', status:'Open',        date:'2025-03-20', notes:'TV not turning on' },
+  { id:'JOB-006', cust:'Linda Martinez',  address:'21 Elm Court, Midtown',         service:'📡 Antenna Installation', assigned:'EMP003', status:'Done',        date:'2025-03-17', notes:'Rooftop antenna setup for 3 TVs' },
+  { id:'JOB-007', cust:'Kevin Thompson',  address:'5 Walnut Dr, Riverside',        service:'🔧 TV Repair',            assigned:'EMP001', status:'Done',        date:'2025-03-15', notes:'Backlight replacement' },
+  { id:'JOB-008', cust:'Priya Patel',     address:'77 Sunset Blvd, Hilltop',      service:'📶 Smart TV Setup',       assigned:'EMP002', status:'Done',        date:'2025-03-14', notes:'Netflix and streaming setup' },
+  { id:'JOB-009', cust:'James Wilson',    address:'30 Harbor Rd, Lakeview',        service:'📺 TV Installation',      assigned:'EMP003', status:'Done',        date:'2025-03-12', notes:'75" wall mount with cable management' },
+  { id:'JOB-010', cust:'Anna Garcia',     address:'14 Rose St, Garden City',       service:'🖥️ Screen Replacement',   assigned:'EMP001', status:'Done',        date:'2025-03-10', notes:'Samsung 55" panel replaced' },
+  // February 2025
+  { id:'JOB-011', cust:'Tom Baker',       address:'66 Lemon Ave, Westgate',        service:'🔧 TV Repair',            assigned:'EMP001', status:'Done',        date:'2025-02-25', notes:'No display issue fixed' },
+  { id:'JOB-012', cust:'Nancy Hill',      address:'9 Forest Rd, Greenpark',        service:'📡 Antenna Installation', assigned:'EMP002', status:'Done',        date:'2025-02-22', notes:'Outdoor antenna with splitter' },
+  { id:'JOB-013', cust:'Omar Sheikh',     address:'42 Crown St, Oldtown',          service:'📺 TV Installation',      assigned:'EMP003', status:'Done',        date:'2025-02-20', notes:'55" LG OLED installation' },
+  { id:'JOB-014', cust:'Lisa Chen',       address:'18 Pearl Ln, Bayview',          service:'🔌 Power Issue Repair',   assigned:'EMP001', status:'Done',        date:'2025-02-18', notes:'Power board replaced' },
+  { id:'JOB-015', cust:'Mark Evans',      address:'55 Stone Way, Uptown',          service:'🔧 TV Repair',            assigned:'EMP002', status:'Done',        date:'2025-02-15', notes:'Remote sensor fixed' },
+  { id:'JOB-016', cust:'Sophie Turner',   address:'3 Blue Bell Rd, Eastside',      service:'📶 Smart TV Setup',       assigned:'EMP003', status:'Done',        date:'2025-02-14', notes:'Android TV setup and apps' },
+  { id:'JOB-017', cust:'Ali Hassan',      address:'27 King St, Central',           service:'🖥️ Screen Replacement',   assigned:'EMP001', status:'Done',        date:'2025-02-10', notes:'65" Sony cracked screen' },
+  { id:'JOB-018', cust:'Clara White',     address:'88 Maple Ave, Northend',        service:'📺 TV Installation',      assigned:'EMP002', status:'Done',        date:'2025-02-08', notes:'Bedroom TV wall mount' },
+  { id:'JOB-019', cust:'Raj Kumar',       address:'11 Valley Rd, Lowlands',        service:'🔧 TV Repair',            assigned:'EMP003', status:'Done',        date:'2025-02-05', notes:'Audio output not working' },
+  { id:'JOB-020', cust:'Helen Moore',     address:'49 Summit Dr, Highlands',       service:'📡 Antenna Installation', assigned:'EMP001', status:'Done',        date:'2025-02-03', notes:'Signal booster with new antenna' },
+  // January 2025
+  { id:'JOB-021', cust:'George Adams',    address:'6 River St, Waterfront',        service:'📺 TV Installation',      assigned:'EMP002', status:'Done',        date:'2025-01-28', notes:'85" Samsung living room setup' },
+  { id:'JOB-022', cust:'Fatima Noor',     address:'33 Crescent Rd, Moonview',      service:'🔧 TV Repair',            assigned:'EMP003', status:'Done',        date:'2025-01-25', notes:'Horizontal lines on screen' },
+  { id:'JOB-023', cust:'Peter Fox',       address:'72 Eagle Lane, Skyview',        service:'🔌 Power Issue Repair',   assigned:'EMP001', status:'Done',        date:'2025-01-22', notes:'Fuse replaced, power restored' },
+  { id:'JOB-024', cust:'Diana Prince',    address:'15 Shield Ave, Metropolis',     service:'📶 Smart TV Setup',       assigned:'EMP002', status:'Done',        date:'2025-01-20', notes:'Google TV initial setup' },
+  { id:'JOB-025', cust:'Carlos Ruiz',     address:'61 Cactus Blvd, Desert View',   service:'🖥️ Screen Replacement',   assigned:'EMP003', status:'Done',        date:'2025-01-18', notes:'LG 50" panel swap' },
+  { id:'JOB-026', cust:'Mei Lin',         address:'4 Jade St, Eastmere',           service:'📡 Antenna Installation', assigned:'EMP001', status:'Done',        date:'2025-01-15', notes:'Rooftop antenna for 2 floors' },
+  { id:'JOB-027', cust:'Brian Scott',     address:'90 Harbor View, Dockside',      service:'🔧 TV Repair',            assigned:'EMP002', status:'Done',        date:'2025-01-12', notes:'Motherboard replaced' },
+  { id:'JOB-028', cust:'Yasmine Saleh',   address:'37 Palm Rd, Beachside',         service:'📺 TV Installation',      assigned:'EMP003', status:'Done',        date:'2025-01-10', notes:'65" outdoor-rated TV install' },
+  { id:'JOB-029', cust:'Ivan Petrov',     address:'22 Snow Lane, Coldfield',       service:'🔧 TV Repair',            assigned:'EMP001', status:'Done',        date:'2025-01-08', notes:'HDMI board fixed' },
+  { id:'JOB-030', cust:'Layla Hassan',    address:'58 Lotus Rd, Gardenside',       service:'📶 Smart TV Setup',       assigned:'EMP003', status:'Done',        date:'2025-01-05', notes:'Firestick and remote pairing' },
+];
+
+let appointments = [
+  { id:'APT-001', cust:'Tom Green',    date:'2025-03-21', time:'09:00', service:'📺 TV Installation', assigned:'EMP001', status:'Confirmed' },
+  { id:'APT-002', cust:'Alice White',  date:'2025-03-21', time:'10:30', service:'🔧 TV Repair',       assigned:'EMP002', status:'Confirmed' },
+  { id:'APT-003', cust:'Chris Black',  date:'2025-03-22', time:'14:00', service:'📶 Smart TV Setup',  assigned:'EMP003', status:'Pending' },
+];
+
+let inventory = [
+  { id:'PRT-001', name:'LED Backlight Strip',      cat:'Screen',    stock:14, min:5,  cost:22.0 },
+  { id:'PRT-002', name:'Main Board (Universal)',   cat:'Board',     stock:6,  min:4,  cost:85.0 },
+  { id:'PRT-003', name:'Power Supply Board',       cat:'Board',     stock:3,  min:5,  cost:55.0 },
+  { id:'PRT-004', name:'T-Con Board',              cat:'Board',     stock:0,  min:3,  cost:48.0 },
+  { id:'PRT-005', name:'HDMI Port (replacement)',  cat:'Port',      stock:20, min:8,  cost:8.50 },
+  { id:'PRT-006', name:'Remote Control (universal)',cat:'Accessory',stock:12, min:5,  cost:12.0 },
+  { id:'PRT-007', name:'Wall Mount Bracket (55")', cat:'Mount',     stock:8,  min:3,  cost:35.0 },
+  { id:'PRT-008', name:'Coaxial Cable (10m)',      cat:'Cable',     stock:2,  min:5,  cost:14.0 },
+];
+
+let activity = [
+  { text:'Job JOB-002 TV Repair updated to In Progress by Alex Morgan', time:'10 min ago', color:'var(--warn)' },
+  { text:'New installation appointment for Tom Green on Mar 21',        time:'1 hr ago',   color:'var(--info)' },
+  { text:'Job JOB-006 Antenna Installation marked Done by Sam Rivera',  time:'3 hrs ago',  color:'var(--success)' },
+  { text:'Low stock alert: Power Supply Board (3 remaining)',           time:'5 hrs ago',  color:'var(--danger)' },
+  { text:'New repair call JOB-005 created for Robert Davis',           time:'Yesterday',  color:'var(--accent)' },
+];
+
+let currentUser = null;
+let updatingJobId = null;
+let jobCounter = 7;
+let apptCounter = 4;
+let partCounter = 7;
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+function doLogin() {
+  const id = document.getElementById('loginId').value.trim().toUpperCase();
+  const pw = document.getElementById('loginPass').value;
+  const u  = USERS[id];
+  if (u && u.pass === pw) {
+    currentUser = u;
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    buildUI();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+document.getElementById('loginId').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginPass').focus(); });
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// ═══════════════════════════════════════════════
+//  UI BUILD
+// ═══════════════════════════════════════════════
+function buildUI() {
+  const u = currentUser;
+  document.getElementById('topName').textContent = u.name;
+  document.getElementById('topRole').textContent = u.role === 'admin' ? 'Administrator' : 'Employee';
+  document.getElementById('topAvatar').textContent = u.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+
+  const sidebar = document.getElementById('sidebar');
+  if (u.role === 'admin') {
+    sidebar.innerHTML = `
+      <span class="nav-section">Main</span>
+      <div class="nav-item active" onclick="showPage('page-dashboard')"><span class="ni">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('page-jobs')"><span class="ni">🔧</span> All Jobs <span class="badge">${jobs.filter(j=>j.status!=='Done'&&j.status!=='Cancelled').length}</span></div>
+      <div class="nav-item" onclick="showPage('page-appointments')"><span class="ni">📅</span> Appointments</div>
+      <span class="nav-section">Management</span>
+      <div class="nav-item" onclick="showPage('page-employees')"><span class="ni">👥</span> Employees</div>
+      <div class="nav-item" onclick="showPage('page-inventory')"><span class="ni">📦</span> Inventory</div>
+      <div class="nav-item" onclick="showPage('page-reports')"><span class="ni">📈</span> Reports</div>
+    `;
+    renderDashboard();
+    renderJobs();
+    renderEmployees();
+    renderAppointments();
+    renderInventory();
+    renderReports();
+  } else {
+    sidebar.innerHTML = `
+      <span class="nav-section">Main</span>
+      <div class="nav-item active" onclick="showPage('page-emp-dashboard')"><span class="ni">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('page-myjobs')"><span class="ni">🔧</span> My Jobs <span class="badge" id="myJobBadge">0</span></div>
+      <div class="nav-item" onclick="showPage('page-myappointments')"><span class="ni">📅</span> Appointments</div>
+      <div class="nav-item" onclick="showPage('page-inventory')"><span class="ni">📦</span> Inventory</div>
+      <span class="nav-section">Account</span>
+      <div class="nav-item" onclick="showPage('page-profile')"><span class="ni">👤</span> My Profile</div>
+    `;
+    renderEmpDashboard();
+    renderMyJobs();
+    renderMyAppts();
+    renderInventory();
+    renderProfile();
+    showPage('page-emp-dashboard');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(pid) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => { if(n.getAttribute('onclick') && n.getAttribute('onclick').includes(pid)) n.classList.add('active'); });
+}
+
+// ═══════════════════════════════════════════════
+//  STATUS CHIP
+// ═══════════════════════════════════════════════
+function statusChip(s) {
+  const map = { 'Open':'chip-open','In Progress':'chip-progress','Done':'chip-done','Cancelled':'chip-cancelled','Confirmed':'chip-done','Pending':'chip-open' };
+  return `<span class="chip ${map[s]||'chip-open'}">${s}</span>`;
+}
+function prioClass(p) { return p==='High'?'prio-high':p==='Low'?'prio-low':'prio-med'; }
+function empName(id) { const e = EMPLOYEES.find(x=>x.id===id); return e ? e.name : id; }
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const open     = jobs.filter(j=>j.status==='Open').length;
+  const inProg   = jobs.filter(j=>j.status==='In Progress').length;
+  const done     = jobs.filter(j=>j.status==='Done').length;
+  const cancelled= jobs.filter(j=>j.status==='Cancelled').length;
+  const total    = jobs.length;
+  const today    = new Date().toISOString().slice(0,10);
+  const todayJobs= jobs.filter(j=>j.date===today).length;
+  const thisMonth= today.slice(0,7);
+  const monthDone= jobs.filter(j=>j.date.startsWith(thisMonth)&&j.status==='Done').length;
+  const monthPend= jobs.filter(j=>j.date.startsWith(thisMonth)&&(j.status==='Open'||j.status==='In Progress')).length;
+
+  // ── Stat Cards ──
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Calls</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-sub">All time</div>
+      <span class="stat-icon">📋</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Completed</div>
+      <div class="stat-value" style="color:var(--success)">${done}</div>
+      <div class="stat-sub" style="color:var(--success)">✓ Done</div>
+      <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-value" style="color:var(--warn)">${inProg}</div>
+      <div class="stat-sub" style="color:var(--warn)">⚙ Being worked on</div>
+      <span class="stat-icon">⚙️</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending / Open</div>
+      <div class="stat-value" style="color:var(--info)">${open}</div>
+      <div class="stat-sub" style="color:var(--info)">⏳ Awaiting start</div>
+      <span class="stat-icon">🔓</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This Month Done</div>
+      <div class="stat-value" style="color:var(--success)">${monthDone}</div>
+      <div class="stat-sub">Completed in ${new Date().toLocaleString('default',{month:'long'})}</div>
+      <span class="stat-icon">📅</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This Month Pending</div>
+      <div class="stat-value" style="color:var(--warn)">${monthPend}</div>
+      <div class="stat-sub">Open + In Progress</div>
+      <span class="stat-icon">⏰</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today's Calls</div>
+      <div class="stat-value">${todayJobs}</div>
+      <div class="stat-sub">Added today</div>
+      <span class="stat-icon">🗓️</span>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Completion Rate</div>
+      <div class="stat-value" style="color:var(--accent)">${total?Math.round(done/total*100):0}%</div>
+      <div class="stat-sub">Of all time jobs</div>
+      <span class="stat-icon">🏆</span>
+    </div>
+  `;
+
+  // ── Status Bar ──
+  document.getElementById('dashTotalLabel').textContent = `${total} total calls`;
+  const barEl = document.getElementById('statusBar');
+  const legEl = document.getElementById('statusLegend');
+  const segments = [
+    { label:'Done',        count:done,      color:'var(--success)' },
+    { label:'In Progress', count:inProg,    color:'var(--warn)' },
+    { label:'Open',        count:open,      color:'var(--info)' },
+    { label:'Cancelled',   count:cancelled, color:'var(--danger)' },
+  ];
+  barEl.innerHTML = segments.map(s => {
+    const pct = total ? (s.count/total*100) : 0;
+    return pct > 0 ? `<div style="flex:${pct};background:${s.color};min-width:4px;border-radius:4px" title="${s.label}: ${s.count}"></div>` : '';
+  }).join('');
+  legEl.innerHTML = segments.map(s => `
+    <div style="display:flex;align-items:center;gap:6px;font-size:12.5px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${s.color};display:inline-block"></span>
+      <span style="color:var(--muted)">${s.label}</span>
+      <span style="font-weight:700">${s.count}</span>
+      <span style="color:var(--muted);font-size:11px">(${total?Math.round(s.count/total*100):0}%)</span>
+    </div>`).join('');
+
+  // ── Employee Tracker ──
+  const mFilter = (document.getElementById('trackerMonth')||{}).value || 'ALL';
+  const empTrackerEl = document.getElementById('empTracker');
+  if (empTrackerEl) {
+    empTrackerEl.innerHTML = EMPLOYEES.map(e => {
+      const base = mFilter==='ALL' ? jobs.filter(j=>j.assigned===e.id) : jobs.filter(j=>j.assigned===e.id && j.date.startsWith(mFilter));
+      const eDone  = base.filter(j=>j.status==='Done').length;
+      const eProg  = base.filter(j=>j.status==='In Progress').length;
+      const eOpen  = base.filter(j=>j.status==='Open').length;
+      const eTotal = base.length;
+      const pct    = eTotal ? Math.round(eDone/eTotal*100) : 0;
+      return `
+      <div style="padding:14px 18px;border-bottom:1px solid rgba(42,48,69,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#0d0f14">${e.avatar}</div>
+            <div>
+              <div style="font-weight:700;font-size:14px">${e.name}</div>
+              <div style="font-size:11px;color:var(--muted)">${e.role}</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">${eTotal}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+          <div style="flex:1;background:rgba(46,204,122,.08);border:1px solid rgba(46,204,122,.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:var(--success)">${eDone}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Done</div>
+          </div>
+          <div style="flex:1;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:var(--warn)">${eProg}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">In Progress</div>
+          </div>
+          <div style="flex:1;background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:var(--info)">${eOpen}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Pending</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--success),var(--accent));border-radius:3px;transition:width .4s ease"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:var(--success);min-width:32px;text-align:right">${pct}%</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Recent Jobs ──
+  const recent = [...jobs].reverse().slice(0,6);
+  document.getElementById('recentJobsTbl').innerHTML = recent.map(j => `
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${j.id}</span></td>
+      <td>${j.cust}</td>
+      <td style="font-size:12px;color:var(--muted)">${empName(j.assigned)}</td>
+      <td>${statusChip(j.status)}</td>
+    </tr>`).join('');
+
+  // ── Activity ──
+  document.getElementById('activityFeed').innerHTML = activity.map(a => `
+    <div class="activity-item">
+      <div class="act-dot" style="background:${a.color}"></div>
+      <div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>
+    </div>`).join('');
+
+  document.getElementById('dashGreet').textContent = `Welcome back, ${currentUser ? currentUser.name : 'Admin'} · ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}`;
+}
+
+// ═══════════════════════════════════════════════
+//  JOBS
+// ═══════════════════════════════════════════════
+function renderJobs(filter='') {
+  const filtered = jobs.filter(j =>
+    !filter ||
+    j.id.toLowerCase().includes(filter) ||
+    j.cust.toLowerCase().includes(filter) ||
+    j.service.toLowerCase().includes(filter)
+  );
+  document.getElementById('allJobsTbl').innerHTML = filtered.map(j => `
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${j.id}</span></td>
+      <td><div style="font-weight:600">${j.cust}</div></td>
+      <td style="font-size:12.5px;color:var(--muted);max-width:160px">${j.address||'—'}</td>
+      <td>${j.service}</td>
+      <td style="font-size:13px">${empName(j.assigned)}</td>
+      <td>${statusChip(j.status)}</td>
+      <td style="font-size:12px;color:var(--muted)">${j.date}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="openUpdateJob('${j.id}')">Update</button></td>
+    </tr>`).join('');
+}
+function filterJobs(v) { renderJobs(v.toLowerCase()); }
+
+// ═══════════════════════════════════════════════
+//  ADD JOB
+// ═══════════════════════════════════════════════
+function addJob() {
+  const cust = document.getElementById('jCust').value.trim();
+  if (!cust) { showToast('Please enter customer name', 'info'); return; }
+  const newJob = {
+    id: `JOB-00${jobCounter++}`,
+    cust,
+    address: document.getElementById('jAddress').value || '—',
+    service: document.getElementById('jService').value,
+    assigned: document.getElementById('jAssign').value,
+    status: 'Open', date: new Date().toISOString().slice(0,10),
+    notes: document.getElementById('jNotes').value,
+  };
+  jobs.unshift(newJob);
+  activity.unshift({ text:`New job ${newJob.id} created for ${cust}`, time:'Just now', color:'var(--accent)' });
+  closeModal('newJobModal');
+  renderDashboard(); renderJobs(); renderEmpDashboard(); renderMyJobs();
+  document.getElementById('jCust').value=''; document.getElementById('jAddress').value='';
+  document.getElementById('jNotes').value='';
+  showToast(`Job ${newJob.id} created!`, 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  UPDATE JOB STATUS
+// ═══════════════════════════════════════════════
+function openUpdateJob(jid) {
+  const j = jobs.find(x=>x.id===jid);
+  updatingJobId = jid;
+  document.getElementById('updateJobSub').textContent = `${j.id} · ${j.cust} · ${j.service}`;
+  document.getElementById('uStatus').value = j.status;
+  document.getElementById('uNotes').value = '';
+  openModal('updateJobModal');
+}
+function saveJobUpdate() {
+  const j = jobs.find(x=>x.id===updatingJobId);
+  const ns = document.getElementById('uStatus').value;
+  const note = document.getElementById('uNotes').value;
+  j.status = ns;
+  activity.unshift({ text:`${j.id} updated to "${ns}" by ${currentUser.name}${note?' – '+note:''}`, time:'Just now', color:'var(--warn)' });
+  closeModal('updateJobModal');
+  renderDashboard(); renderJobs(); renderMyJobs(); renderReports(); renderEmpDashboard();
+  showToast(`Job ${j.id} updated to ${ns}`, 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  EMPLOYEES
+// ═══════════════════════════════════════════════
+function renderEmployees() {
+  document.getElementById('empSubtitle').textContent = `${EMPLOYEES.length} employee(s) · manage accounts and credentials`;
+  document.getElementById('empGrid').innerHTML = EMPLOYEES.map(e => {
+    const empJobs = jobs.filter(j=>j.assigned===e.id);
+    const active = empJobs.filter(j=>j.status==='In Progress').length;
+    const done   = empJobs.filter(j=>j.status==='Done').length;
+    const userEntry = USERS[e.id];
+    const empPass = userEntry ? userEntry.pass : '—';
+    return `
+    <div class="emp-card">
+      <div class="emp-status">${statusChip('Confirmed')}</div>
+      <div class="emp-card-top">
+        <div class="emp-avatar">${e.avatar}</div>
+        <div>
+          <div class="emp-name">${e.name}</div>
+          <div class="emp-role">${e.role}</div>
+        </div>
+      </div>
+      <div class="emp-info">
+        <div class="emp-info-row"><span class="emp-info-label">Speciality</span><span>${e.speciality}</span></div>
+        <div class="emp-info-row"><span class="emp-info-label">Total Jobs</span><span style="font-weight:700">${empJobs.length}</span></div>
+        <div class="emp-info-row"><span class="emp-info-label">Active</span><span style="color:var(--warn)">${active}</span></div>
+        <div class="emp-info-row"><span class="emp-info-label">Completed</span><span style="color:var(--success)">${done}</span></div>
+      </div>
+      <div class="emp-cred">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Login Credentials</div>
+        <div class="emp-cred-row"><span class="cred-key">User ID</span><span class="cred-val">${e.id}</span></div>
+        <div class="emp-cred-row"><span class="cred-key">Password</span><span class="cred-val">${empPass}</span></div>
+      </div>
+      <button class="btn btn-danger btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="removeEmployee('${e.id}')">🗑 Remove Employee</button>
+    </div>`;
+  }).join('');
+  refreshAssignDropdowns();
+  refreshHistoryDropdown();
+  renderMonthlyRecords();
+  renderJobHistory();
+}
+
+function refreshHistoryDropdown() {
+  const sel = document.getElementById('historyEmp');
+  if (!sel) return;
+  sel.innerHTML = '<option value="ALL">All Employees</option>' +
+    EMPLOYEES.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+}
+
+function renderMonthlyRecords() {
+  const year = (document.getElementById('recordYear')||{}).value || '2025';
+  const months = [
+    {key:`${year}-01`,label:'Jan'},{key:`${year}-02`,label:'Feb'},{key:`${year}-03`,label:'Mar'},
+    {key:`${year}-04`,label:'Apr'},{key:`${year}-05`,label:'May'},{key:`${year}-06`,label:'Jun'},
+    {key:`${year}-07`,label:'Jul'},{key:`${year}-08`,label:'Aug'},{key:`${year}-09`,label:'Sep'},
+    {key:`${year}-10`,label:'Oct'},{key:`${year}-11`,label:'Nov'},{key:`${year}-12`,label:'Dec'},
+  ];
+  const head = document.getElementById('monthlyHead');
+  const body = document.getElementById('monthlyBody');
+  if (!head || !body) return;
+
+  head.innerHTML = `<tr><th>Employee</th>${months.map(m=>`<th style="text-align:center">${m.label}</th>`).join('')}<th style="text-align:center">Total</th></tr>`;
+
+  body.innerHTML = EMPLOYEES.map(e => {
+    let total = 0;
+    const cells = months.map(m => {
+      const count = jobs.filter(j => j.assigned===e.id && j.date.startsWith(m.key) && j.status==='Done').length;
+      total += count;
+      const bg = count === 0 ? '' : count <= 2 ? 'background:rgba(74,158,255,.1);color:var(--info)' : count <= 5 ? 'background:rgba(240,165,0,.1);color:var(--warn)' : 'background:rgba(46,204,122,.1);color:var(--success)';
+      return `<td style="text-align:center"><span style="display:inline-block;min-width:28px;padding:3px 8px;border-radius:20px;font-weight:700;font-size:13px;${bg}">${count||'—'}</span></td>`;
+    }).join('');
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#0d0f14">${e.avatar}</div>
+          <div><div style="font-weight:600;font-size:13.5px">${e.name}</div><div style="font-size:11px;color:var(--muted)">${e.role}</div></div>
+        </div>
+      </td>
+      ${cells}
+      <td style="text-align:center"><span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent)">${total}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderJobHistory() {
+  const empFilter   = (document.getElementById('historyEmp')||{}).value || 'ALL';
+  const monthFilter = (document.getElementById('historyMonth')||{}).value || 'ALL';
+  const tbl = document.getElementById('historyTbl');
+  if (!tbl) return;
+
+  let filtered = [...jobs].sort((a,b)=>b.date.localeCompare(a.date));
+  if (empFilter !== 'ALL')   filtered = filtered.filter(j=>j.assigned===empFilter);
+  if (monthFilter !== 'ALL') filtered = filtered.filter(j=>j.date.startsWith(monthFilter));
+
+  if (!filtered.length) {
+    tbl.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:28px">No records found</td></tr>`;
+    return;
+  }
+  tbl.innerHTML = filtered.map(j => `
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${j.id}</span></td>
+      <td style="font-size:12.5px;color:var(--muted)">${j.date}</td>
+      <td style="font-size:13px;font-weight:600">${empName(j.assigned)}</td>
+      <td>${j.cust}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:130px">${j.address||'—'}</td>
+      <td style="font-size:12.5px">${j.service}</td>
+      <td>${statusChip(j.status)}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:140px">${j.notes||'—'}</td>
+    </tr>`).join('');
+}
+
+
+function addEmployee() {
+  const name = document.getElementById('eName').value.trim();
+  const role = document.getElementById('eRole').value.trim();
+  const spec = document.getElementById('eSpec').value.trim();
+  const eid  = document.getElementById('eId').value.trim().toUpperCase();
+  const pass = document.getElementById('ePass').value.trim();
+  const errEl = document.getElementById('empCreateError');
+
+  if (!name || !eid || !pass) { errEl.style.display='block'; errEl.textContent='Name, User ID and Password are required.'; return; }
+  if (USERS[eid]) { errEl.style.display='block'; errEl.textContent=`User ID "${eid}" already exists. Choose a different one.`; return; }
+  errEl.style.display='none';
+
+  const avatar = name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+  EMPLOYEES.push({ id:eid, name, role:role||'Technician', avatar, jobs:0, speciality:spec||'General Repair' });
+  USERS[eid] = { id:eid, pass, name, role:'employee', emp:eid };
+
+  activity.unshift({ text:`New employee ${name} (${eid}) added by Admin`, time:'Just now', color:'var(--success)' });
+  closeModal('newEmpModal');
+  ['eName','eRole','eSpec','eId','ePass'].forEach(id => document.getElementById(id).value='');
+  renderEmployees();
+  renderDashboard();
+  showToast(`Employee ${name} created! Share ID: ${eid} / PW: ${pass}`, 'success');
+}
+
+function removeEmployee(eid) {
+  if (!confirm(`Remove employee ${empName(eid)}? This cannot be undone.`)) return;
+  const idx = EMPLOYEES.findIndex(e=>e.id===eid);
+  if (idx > -1) EMPLOYEES.splice(idx, 1);
+  delete USERS[eid];
+  renderEmployees();
+  renderDashboard();
+  showToast('Employee removed','info');
+}
+
+function refreshAssignDropdowns() {
+  const opts = EMPLOYEES.map(e=>`<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+  ['jAssign','aAssign'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+}
+
+// ═══════════════════════════════════════════════
+//  APPOINTMENTS
+// ═══════════════════════════════════════════════
+function renderAppointments() {
+  document.getElementById('apptTbl').innerHTML = appointments.map(a => `
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${a.id}</span></td>
+      <td>${a.cust}</td>
+      <td>${a.date} at ${a.time}</td>
+      <td>${a.service}</td>
+      <td>${empName(a.assigned)}</td>
+      <td>${statusChip(a.status)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="toggleApptStatus('${a.id}')">Toggle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAppt('${a.id}')">Cancel</button>
+      </td>
+    </tr>`).join('');
+}
+function addAppt() {
+  const cust = document.getElementById('aCust').value.trim();
+  if (!cust) { showToast('Enter customer name','info'); return; }
+  const na = {
+    id:`APT-00${apptCounter++}`, cust,
+    date: document.getElementById('aDate').value || new Date().toISOString().slice(0,10),
+    time: document.getElementById('aTime').value,
+    service: document.getElementById('aService').value,
+    assigned: document.getElementById('aAssign').value,
+    status: 'Pending'
+  };
+  appointments.push(na);
+  activity.unshift({ text:`New appointment ${na.id} for ${cust} on ${na.date}`, time:'Just now', color:'var(--info)' });
+  closeModal('newApptModal');
+  renderAppointments(); renderMyAppts(); renderDashboard();
+  document.getElementById('aCust').value='';
+  showToast(`Appointment ${na.id} booked!`,'success');
+}
+function toggleApptStatus(id) {
+  const a = appointments.find(x=>x.id===id);
+  a.status = a.status==='Confirmed'?'Pending':'Confirmed';
+  renderAppointments();
+}
+function deleteAppt(id) {
+  appointments = appointments.filter(x=>x.id!==id);
+  renderAppointments();
+  showToast('Appointment cancelled','info');
+}
+
+// ═══════════════════════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════════════════════
+function renderInventory() {
+  const low  = inventory.filter(p=>p.stock>0&&p.stock<p.min).length;
+  const out  = inventory.filter(p=>p.stock===0).length;
+  if (document.getElementById('invTotal')) {
+    document.getElementById('invTotal').textContent = inventory.length;
+    document.getElementById('invLow').textContent = low;
+    document.getElementById('invOut').textContent = out;
+  }
+  const el = document.getElementById('invTbl');
+  if (el) el.innerHTML = inventory.map(p => {
+    let st = p.stock===0 ? `<span class="chip chip-cancelled">Out of Stock</span>` :
+             p.stock < p.min ? `<span class="chip chip-progress">Low Stock</span>` :
+             `<span class="chip chip-done">In Stock</span>`;
+    return `<tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--muted)">${p.id}</span></td>
+      <td>${p.name}</td><td>${p.cat}</td>
+      <td style="font-weight:700;${p.stock===0?'color:var(--danger)':p.stock<p.min?'color:var(--warn)':''}">${p.stock}</td>
+      <td>${p.min}</td><td>$${p.cost.toFixed(2)}</td><td>${st}</td>
+    </tr>`;
+  }).join('');
+}
+function addPart() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { showToast('Enter part name','info'); return; }
+  inventory.push({
+    id:`PRT-00${partCounter++}`, name,
+    cat: document.getElementById('pCat').value,
+    stock: +document.getElementById('pStock').value,
+    min: +document.getElementById('pMin').value,
+    cost: +document.getElementById('pCost').value,
+  });
+  closeModal('newPartModal');
+  renderInventory();
+  document.getElementById('pName').value='';
+  showToast('Part added to inventory','success');
+}
+
+// ═══════════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════════
+function renderReports() {
+  const total = jobs.length;
+  const done  = jobs.filter(j=>j.status==='Done').length;
+  const open  = jobs.filter(j=>j.status==='Open').length;
+  const prog  = jobs.filter(j=>j.status==='In Progress').length;
+  const rate  = total ? Math.round(done/total*100) : 0;
+
+  const el = document.getElementById('reportStats');
+  if (el) el.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value" style="color:var(--success)">${rate}%</div><span class="stat-icon">🏆</span></div>
+    <div class="stat-card"><div class="stat-label">Total Jobs</div><div class="stat-value">${total}</div><span class="stat-icon">📋</span></div>
+    <div class="stat-card"><div class="stat-label">Appointments</div><div class="stat-value">${appointments.length}</div><span class="stat-icon">📅</span></div>
+    <div class="stat-card"><div class="stat-label">Inventory Items</div><div class="stat-value">${inventory.length}</div><span class="stat-icon">📦</span></div>
+  `;
+
+  const pt = document.getElementById('perfTbl');
+  if (pt) pt.innerHTML = EMPLOYEES.map(e => {
+    const ej = jobs.filter(j=>j.assigned===e.id);
+    return `<tr>
+      <td><div style="font-weight:600">${e.name}</div><div style="font-size:11.5px;color:var(--muted)">${e.role}</div></td>
+      <td style="color:var(--success);font-weight:700">${ej.filter(j=>j.status==='Done').length}</td>
+      <td style="color:var(--warn)">${ej.filter(j=>j.status==='In Progress').length}</td>
+      <td style="color:var(--muted)">~2.4 hrs</td>
+    </tr>`;
+  }).join('');
+
+  const bt = document.getElementById('breakTbl');
+  if (bt) {
+    const statuses = ['Open','In Progress','Done','Cancelled'];
+    bt.innerHTML = statuses.map(s => {
+      const cnt = jobs.filter(j=>j.status===s).length;
+      return `<tr><td>${statusChip(s)}</td><td style="font-weight:700">${cnt}</td><td style="color:var(--muted)">${total?Math.round(cnt/total*100):0}%</td></tr>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  EMPLOYEE VIEWS
+// ═══════════════════════════════════════════════
+function renderEmpDashboard() {
+  if (!currentUser || currentUser.role !== 'employee') return;
+  const eid = currentUser.emp;
+  const myJobs = jobs.filter(j=>j.assigned===eid);
+  const done   = myJobs.filter(j=>j.status==='Done').length;
+  const inProg = myJobs.filter(j=>j.status==='In Progress').length;
+  const open   = myJobs.filter(j=>j.status==='Open').length;
+  const cancelled = myJobs.filter(j=>j.status==='Cancelled').length;
+  const total  = myJobs.length;
+  const today  = new Date().toISOString().slice(0,10);
+  const thisMonth = today.slice(0,7);
+  const monthDone = myJobs.filter(j=>j.date.startsWith(thisMonth)&&j.status==='Done').length;
+  const monthPend = myJobs.filter(j=>j.date.startsWith(thisMonth)&&(j.status==='Open'||j.status==='In Progress')).length;
+  const todayJ = myJobs.filter(j=>j.date===today).length;
+
+  // Update sidebar badge
+  const badge = document.getElementById('myJobBadge');
+  if (badge) badge.textContent = open + inProg;
+
+  document.getElementById('empDashGreet').textContent = `Welcome back, ${currentUser.name} · ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}`;
+
+  // Stat cards
+  document.getElementById('empStatsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">My Total Calls</div><div class="stat-value">${total}</div><div class="stat-sub">All time</div><span class="stat-icon">📋</span></div>
+    <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" style="color:var(--success)">${done}</div><div class="stat-sub" style="color:var(--success)">✓ Done</div><span class="stat-icon">✅</span></div>
+    <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value" style="color:var(--warn)">${inProg}</div><div class="stat-sub" style="color:var(--warn)">⚙ Working on</div><span class="stat-icon">⚙️</span></div>
+    <div class="stat-card"><div class="stat-label">Pending / Open</div><div class="stat-value" style="color:var(--info)">${open}</div><div class="stat-sub" style="color:var(--info)">⏳ Not started</div><span class="stat-icon">🔓</span></div>
+    <div class="stat-card"><div class="stat-label">This Month Done</div><div class="stat-value" style="color:var(--success)">${monthDone}</div><div class="stat-sub">Completed this month</div><span class="stat-icon">📅</span></div>
+    <div class="stat-card"><div class="stat-label">This Month Pending</div><div class="stat-value" style="color:var(--warn)">${monthPend}</div><div class="stat-sub">Open + In Progress</div><span class="stat-icon">⏰</span></div>
+    <div class="stat-card"><div class="stat-label">Today's Calls</div><div class="stat-value">${todayJ}</div><div class="stat-sub">Assigned today</div><span class="stat-icon">🗓️</span></div>
+    <div class="stat-card"><div class="stat-label">Completion Rate</div><div class="stat-value" style="color:var(--accent)">${total?Math.round(done/total*100):0}%</div><div class="stat-sub">Of my all time jobs</div><span class="stat-icon">🏆</span></div>
+  `;
+
+  // Status bar
+  document.getElementById('empTotalLabel').textContent = `${total} total calls`;
+  const segments = [
+    {label:'Done',count:done,color:'var(--success)'},
+    {label:'In Progress',count:inProg,color:'var(--warn)'},
+    {label:'Open',count:open,color:'var(--info)'},
+    {label:'Cancelled',count:cancelled,color:'var(--danger)'},
+  ];
+  document.getElementById('empStatusBar').innerHTML = segments.map(s=>{
+    const pct = total?(s.count/total*100):0;
+    return pct>0?`<div style="flex:${pct};background:${s.color};min-width:4px;border-radius:4px" title="${s.label}: ${s.count}"></div>`:'';
+  }).join('');
+  document.getElementById('empStatusLegend').innerHTML = segments.map(s=>`
+    <div style="display:flex;align-items:center;gap:6px;font-size:12.5px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${s.color};display:inline-block"></span>
+      <span style="color:var(--muted)">${s.label}</span>
+      <span style="font-weight:700">${s.count}</span>
+      <span style="color:var(--muted);font-size:11px">(${total?Math.round(s.count/total*100):0}%)</span>
+    </div>`).join('');
+
+  // Monthly table
+  const year = (document.getElementById('empTrackerYear')||{}).value || '2025';
+  const months = [
+    {key:`${year}-01`,label:'January'},{key:`${year}-02`,label:'February'},{key:`${year}-03`,label:'March'},
+    {key:`${year}-04`,label:'April'},{key:`${year}-05`,label:'May'},{key:`${year}-06`,label:'June'},
+    {key:`${year}-07`,label:'July'},{key:`${year}-08`,label:'August'},{key:`${year}-09`,label:'September'},
+    {key:`${year}-10`,label:'October'},{key:`${year}-11`,label:'November'},{key:`${year}-12`,label:'December'},
+  ];
+  const mEl = document.getElementById('empMonthlyTable');
+  if (mEl) {
+    mEl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th style="padding:10px 18px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Month</th><th style="padding:10px 18px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Done</th><th style="padding:10px 18px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Pending</th><th style="padding:10px 18px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)">Total</th></tr></thead>
+      <tbody>${months.map(m=>{
+        const mJobs = myJobs.filter(j=>j.date.startsWith(m.key));
+        const mDone = mJobs.filter(j=>j.status==='Done').length;
+        const mPend = mJobs.filter(j=>j.status==='Open'||j.status==='In Progress').length;
+        const mTot  = mJobs.length;
+        if (!mTot) return `<tr><td style="padding:11px 18px;font-size:13px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--muted)">${m.label}</td><td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--muted)">—</td><td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--muted)">—</td><td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--muted)">—</td></tr>`;
+        return `<tr>
+          <td style="padding:11px 18px;font-size:13.5px;font-weight:600;border-bottom:1px solid rgba(42,48,69,.4)">${m.label}</td>
+          <td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4)"><span style="background:rgba(46,204,122,.1);color:var(--success);font-weight:700;padding:3px 10px;border-radius:20px;font-size:13px">${mDone}</span></td>
+          <td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4)"><span style="background:rgba(240,165,0,.1);color:var(--warn);font-weight:700;padding:3px 10px;border-radius:20px;font-size:13px">${mPend}</span></td>
+          <td style="text-align:center;padding:11px 18px;border-bottom:1px solid rgba(42,48,69,.4)"><span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);font-size:15px">${mTot}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  // Recent jobs
+  const recent = [...myJobs].reverse().slice(0,6);
+  const rEl = document.getElementById('empRecentTbl');
+  if (rEl) rEl.innerHTML = recent.map(j=>`
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${j.id}</span></td>
+      <td>${j.cust}</td>
+      <td style="font-size:12px">${j.service}</td>
+      <td>${statusChip(j.status)}</td>
+    </tr>`).join('');
+
+  // Activity
+  const myActivity = activity.filter(a => a.text.includes(currentUser.name) || a.text.includes(eid)).slice(0,6);
+  const aEl = document.getElementById('empActivityFeed');
+  if (aEl) aEl.innerHTML = (myActivity.length ? myActivity : activity.slice(0,5)).map(a=>`
+    <div class="activity-item">
+      <div class="act-dot" style="background:${a.color}"></div>
+      <div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>
+    </div>`).join('');
+}
+
+function renderMyJobs() {
+  const el = document.getElementById('myJobsTbl');
+  if (!el || !currentUser || currentUser.role!=='employee') return;
+  const statusF = (document.getElementById('myJobFilter')||{}).value || 'ALL';
+  let myJ = jobs.filter(j=>j.assigned===currentUser.emp);
+  if (statusF !== 'ALL') myJ = myJ.filter(j=>j.status===statusF);
+  myJ = [...myJ].reverse();
+  if (!myJ.length) {
+    el.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:28px">No jobs found</td></tr>`;
+  } else {
+    el.innerHTML = myJ.map(j => `
+      <tr>
+        <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${j.id}</span></td>
+        <td><div style="font-weight:600">${j.cust}</div></td>
+        <td style="font-size:12.5px;color:var(--muted)">${j.address||'—'}</td>
+        <td>${j.service}</td>
+        <td>${statusChip(j.status)}</td>
+        <td style="font-size:12px;color:var(--muted)">${j.date}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="openUpdateJob('${j.id}')">Update</button></td>
+      </tr>`).join('');
+  }
+  const allMy = jobs.filter(j=>j.assigned===currentUser.emp);
+  const subEl = document.getElementById('myJobSub');
+  if (subEl) subEl.textContent = `${allMy.length} total · ${allMy.filter(j=>j.status==='Done').length} done · ${allMy.filter(j=>j.status==='Open'||j.status==='In Progress').length} pending`;
+  // update badge
+  const badge = document.getElementById('myJobBadge');
+  if (badge) badge.textContent = allMy.filter(j=>j.status==='Open'||j.status==='In Progress').length;
+}
+
+function renderMyAppts() {
+  const el = document.getElementById('myApptTbl');
+  if (!el || !currentUser || currentUser.role!=='employee') return;
+  const myA = appointments.filter(a=>a.assigned===currentUser.emp);
+  el.innerHTML = myA.length ? myA.map(a => `
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--accent)">${a.id}</span></td>
+      <td>${a.cust}</td>
+      <td>${a.date} at ${a.time}</td>
+      <td>${a.service}</td>
+      <td>${statusChip(a.status)}</td>
+    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:28px">No appointments assigned</td></tr>`;
+}
+
+function renderProfile() {
+  const el = document.getElementById('profileBox');
+  if (!el || !currentUser) return;
+  const emp = EMPLOYEES.find(e=>e.id===currentUser.emp);
+  if (!emp) return;
+  const empJobs = jobs.filter(j=>j.assigned===emp.id);
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <div class="emp-avatar" style="width:64px;height:64px;font-size:22px;border-radius:16px">${emp.avatar}</div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${emp.name}</div>
+        <div style="color:var(--muted);font-size:13px">${emp.role}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="emp-info-row"><span class="emp-info-label">Employee ID</span><span style="font-family:monospace;color:var(--accent)">${emp.id}</span></div>
+      <div class="emp-info-row"><span class="emp-info-label">Speciality</span><span>${emp.speciality}</span></div>
+      <div class="emp-info-row"><span class="emp-info-label">Total Assigned Jobs</span><span style="font-weight:700">${empJobs.length}</span></div>
+      <div class="emp-info-row"><span class="emp-info-label">Completed Jobs</span><span style="color:var(--success)">${empJobs.filter(j=>j.status==='Done').length}</span></div>
+      <div class="emp-info-row"><span class="emp-info-label">Active Jobs</span><span style="color:var(--warn)">${empJobs.filter(j=>j.status==='In Progress').length}</span></div>
+      <div class="emp-info-row"><span class="emp-info-label">Open Jobs</span><span style="color:var(--info)">${empJobs.filter(j=>j.status==='Open').length}</span></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, type='success') {
+  const icons = { success:'✅', info:'ℹ️', warn:'⚠️' };
+  const t = document.createElement('div');
+  t.className = `toast-item ${type}`;
+  t.innerHTML = `<span>${icons[type]||'🔔'}</span> ${msg}`;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>
